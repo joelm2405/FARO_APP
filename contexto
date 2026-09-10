@@ -1,0 +1,1638 @@
+# CONTEXTO GENERAL DEL PROYECTO — FARO
+
+## 1. Qué es este proyecto
+
+Estamos desarrollando un prototipo para la Hackathon Innova Vivienda, enfocada en soluciones tecnológicas para inmobiliarias y constructoras.
+
+Nuestro equipo eligió el Reto 3: Financiero.
+
+El reto busca mejorar la gestión financiera de proyectos inmobiliarios, especialmente en aspectos como:
+- control presupuestal,
+- comparación entre costos presupuestados y ejecutados,
+- detección de desviaciones y sobrecostos,
+- análisis de precios unitarios,
+- alertas tempranas,
+- proyecciones financieras,
+- visualización de indicadores para mejorar la rentabilidad.
+
+La solución se llama FARO.
+
+Faro es una plataforma de apoyo a la toma de decisiones financieras para constructoras.
+
+IMPORTANTE:
+La idea inicial del proyecto incluía predicciones mediante EVM / machine learning sobre avance físico y costos ejecutados, pero el concepto evolucionó después de conversar con mentores del sector.
+
+El foco actual del producto está principalmente en:
+
+CAMBIOS DE PRECIOS DE INSUMOS -> IMPACTO EN EL PRESUPUESTO -> COMPARACIÓN DE ESCENARIOS -> DECISIÓN -> EXPORTACIÓN / ACTUALIZACIÓN HACIA S10.
+
+No asumir que Faro es un modelo de machine learning.
+No diseñar la interfaz alrededor de IA generativa ni de predicciones probabilísticas.
+
+La lógica central actual es determinística y basada en información de precios, cantidades, presupuesto y partidas.
+
+
+# 2. Problema que buscamos resolver
+
+Una constructora arma el presupuesto de una obra utilizando precios de materiales e insumos.
+
+Por ejemplo:
+
+- acero: S/ 4.00 por kg
+- cemento: S/ 29.00 por bolsa
+- cable: S/ 8.00 por metro
+
+Estos precios alimentan los Análisis de Precios Unitarios (APU) y, mediante ellos, las partidas y el presupuesto general del proyecto.
+
+El problema aparece cuando, semanas o meses después de haber armado el presupuesto, esos precios cambian.
+
+Ejemplo:
+
+Presupuesto original:
+Acero = S/ 4.00/kg
+
+Precio nuevo:
+Acero = S/ 4.35/kg
+
+El dato de que el acero subió no es suficiente para tomar una buena decisión.
+
+La constructora necesita saber:
+
+1. ¿Cuánto subió?
+2. ¿Cuánto acero todavía falta comprar?
+3. ¿Qué partidas utilizan ese acero?
+4. ¿Cuánto dinero adicional representa el cambio?
+5. ¿Cómo afecta el presupuesto completo?
+6. ¿Cómo afecta el margen del proyecto?
+7. ¿Existe otro proveedor con mejor precio?
+8. ¿Qué ocurre con el presupuesto si elijo al proveedor B en lugar del A?
+9. ¿Qué precio debo finalmente llevar a S10?
+
+Hoy esta información puede encontrarse dispersa entre:
+- cotizaciones,
+- Excel,
+- WhatsApp,
+- sistemas internos,
+- proveedores,
+- presupuestos,
+- S10.
+
+Faro busca conectar estas piezas y convertir una variación de precio en una decisión financiera entendible.
+
+
+# 3. Idea central de producto
+
+Faro NO debe verse solamente como un marketplace de materiales.
+
+Tampoco busca competir directamente con plataformas cuya principal función es conseguir una cotización.
+
+La propuesta central es:
+
+"Faro transforma cambios de precios y cotizaciones en impacto presupuestal."
+
+Una frase equivalente:
+
+"Cuando cambia el precio de un insumo, Faro no solo avisa: muestra qué partidas se afectan, cuánto cambia el presupuesto y permite comparar escenarios antes de tomar una decisión."
+
+Otra forma simple de explicarlo:
+
+COTIZACIÓN -> FARO -> DECISIÓN FINANCIERA -> S10.
+
+
+# 4. Usuario principal
+
+El cliente general de Faro es una CONSTRUCTORA.
+
+Pero dentro de la constructora existen distintos tipos de usuario.
+
+El usuario operativo más importante podría ser:
+
+- ingeniero de costos,
+- responsable de presupuestos,
+- oficina técnica,
+- responsable de compras,
+- control de proyectos.
+
+Este usuario necesita trabajar con:
+- proyectos,
+- partidas,
+- APU,
+- metrados,
+- insumos,
+- cantidades,
+- precios,
+- proveedores,
+- cotizaciones,
+- variaciones.
+
+También existe un usuario más ejecutivo:
+
+- gerente de proyecto,
+- gerente de operaciones,
+- responsable financiero.
+
+Este usuario probablemente no quiere revisar cientos de materiales.
+Quiere saber:
+
+- cuáles son los riesgos importantes,
+- cuánto dinero está expuesto,
+- qué partidas se afectan,
+- cuál es el impacto total,
+- qué decisión conviene tomar.
+
+Por eso la interfaz debe funcionar en dos niveles:
+
+NIVEL EJECUTIVO:
+- dashboard,
+- alertas,
+- impacto en soles,
+- margen,
+- partidas críticas,
+- escenarios.
+
+NIVEL OPERATIVO:
+- catálogo,
+- cotizaciones,
+- proveedores,
+- precios,
+- partidas,
+- APU,
+- cantidades,
+- detalles de una alerta.
+
+
+# 5. Actores del sistema
+
+Los principales actores son:
+
+1. Constructora
+2. Faro
+3. Proveedor
+4. Motor de cálculo presupuestal / lógica tipo S10
+5. S10 como sistema externo de destino
+
+No asumir una alianza real con EQUIP.
+No hacer que FARO dependa técnicamente de EQUIP.
+
+Un mentor indicó que depender de una colaboración con EQUIP sería riesgoso.
+
+Por eso Faro debe ser conceptualmente INDEPENDIENTE de EQUIP.
+
+La plataforma debe poder trabajar con precios provenientes de diferentes fuentes.
+
+
+# 6. Fuentes de precios
+
+Faro contempla distintos tipos de proveedores y fuentes.
+
+## Proveedor grande / formal
+
+Puede tener:
+- lista de precios en Excel,
+- sistema propio,
+- plataforma digital,
+- catálogo estructurado.
+
+Flujo posible:
+
+Proveedor -> archivo Excel -> Faro.
+
+Faro recibe el Excel, lo procesa y normaliza información como:
+- SKU,
+- nombre del producto,
+- unidad,
+- familia,
+- proveedor,
+- precio,
+- fecha.
+
+A futuro podría haber integración directa con catálogos online, pero NO es requisito crítico del MVP.
+
+
+## Proveedor pequeño / informal
+
+Puede no tener una lista formal.
+
+El proveedor puede enviar precios por:
+- WhatsApp,
+- texto,
+- foto,
+- cotización informal.
+
+La idea conceptual del producto incluye eventualmente un bot de WhatsApp capaz de leer o registrar estos precios.
+
+Para el MVP esto puede estar simulado o simplificado.
+
+No necesitamos reconocimiento real de imágenes si no está implementado.
+
+
+## Factura electrónica
+
+Una factura electrónica / XML puede servir como evidencia de un precio realmente pagado.
+
+Esto puede utilizarse como una fuente de mayor confianza.
+
+
+# 7. Catálogo maestro
+
+Faro debe tener un CATÁLOGO MAESTRO DE INSUMOS.
+
+Este catálogo sirve para evitar que cada proveedor llame de forma diferente al mismo producto.
+
+Ejemplo:
+
+Proveedor A:
+"ACERO CORR 1/2"
+
+Proveedor B:
+"Fierro corrugado 1/2 pulg"
+
+Proveedor C:
+"Barra acero 1/2"
+
+Internamente Faro debería normalizarlos hacia un mismo producto / SKU.
+
+Un producto maestro puede tener:
+
+- id,
+- SKU,
+- nombre,
+- descripción,
+- unidad,
+- familia,
+- categoría.
+
+Ejemplos de unidad:
+- kg
+- bolsa
+- m
+- m2
+- m3
+- unidad
+
+Ejemplos de familia:
+- acero,
+- cemento,
+- electricidad,
+- sanitarios,
+- acabados.
+
+
+# 8. Regla importante de precios
+
+Un insumo NO debe modelarse como si tuviera un único precio absoluto.
+
+Debe tener un historial de precios.
+
+Conceptualmente:
+
+PriceRecord:
+- producto,
+- proveedor,
+- precio,
+- moneda,
+- fecha,
+- fuente,
+- nivel de confianza.
+
+La lógica propuesta considera niveles de confianza según la fuente.
+
+Ejemplo conceptual:
+
+ALTA CONFIANZA:
+- factura reciente,
+- cotización reciente del proveedor.
+
+MEDIA / ALTA:
+- confirmación directa del proveedor.
+
+MEDIA:
+- índice oficial de referencia.
+
+SEÑAL TEMPRANA:
+- información macroeconómica como petróleo, dólar, diésel, etc.
+
+No es obligatorio implementar toda esta jerarquía en el MVP, pero la arquitectura visual y de datos debería permitirla.
+
+La interfaz debería mostrar siempre:
+
+PRECIO + FECHA + FUENTE
+
+en lugar de mostrar solamente:
+"S/ 4.35".
+
+
+# 9. Proyecto
+
+Una constructora puede tener varios proyectos.
+
+Ejemplo:
+
+- Condominio Los Álamos
+- Residencial San Martín
+- Proyecto Villa Norte
+
+Cada proyecto debería tener como mínimo:
+
+- id,
+- nombre,
+- ubicación,
+- fecha de inicio,
+- moneda,
+- presupuesto,
+- margen esperado,
+- estado.
+
+Flujo básico:
+
+Login
+-> Mis proyectos
+-> Crear proyecto
+-> Entrar al proyecto.
+
+
+# 10. Carrito de insumos por proyecto
+
+Dentro de un proyecto la constructora puede seleccionar insumos.
+
+Conceptualmente funciona parecido a un carrito.
+
+No es un carrito de e-commerce tradicional para pagar con tarjeta.
+
+Representa los materiales que la obra necesita cotizar.
+
+Ejemplo:
+
+Proyecto: Condominio Los Álamos
+
+Carrito:
+- 100,000 kg de acero corrugado
+- 15,000 bolsas de cemento
+- 10,000 m de cable
+- 2,000 m2 de porcelanato
+
+A partir de este carrito puede solicitar cotización.
+
+
+# 11. Cotización
+
+La cotización representa:
+
+Proveedor + insumos + cantidades + precios + fecha.
+
+Una vez aceptada o utilizada para presupuestar, necesitamos preservar una fotografía del precio.
+
+La idea se llama:
+
+PRECIO CONGELADO.
+
+Ejemplo:
+
+Cotización del 10/09/2026:
+Acero = S/ 4.00/kg
+
+Aunque mañana el precio sea S/ 4.35, Faro debe recordar que originalmente el proyecto fue presupuestado con S/ 4.00.
+
+Esto es necesario para comparar:
+
+PRECIO BASE VS PRECIO ACTUAL.
+
+
+# 12. Cotización armada
+
+El flujo funcional es:
+
+Carrito del proyecto
+-> cotización
+-> cotización armada
+-> precio congelado
+-> cálculo del presupuesto.
+
+La cotización armada puede contener:
+
+- proveedor,
+- producto,
+- cantidad,
+- unidad,
+- precio unitario,
+- subtotal,
+- fecha,
+- vigencia.
+
+
+# 13. Motor de cálculo tipo S10
+
+Faro contempla un motor de cálculo presupuestal inspirado en la lógica de S10.
+
+IMPORTANTE:
+No decir que estamos reimplementando S10 completo.
+
+Solo necesitamos reproducir suficiente lógica para demostrar el impacto de cambios de precios.
+
+Jerarquía conceptual:
+
+INSUMO
+-> APU
+-> PARTIDA
+-> PRESUPUESTO.
+
+Ejemplo:
+
+INSUMO:
+Cemento.
+
+APU:
+Costo por 1 m3 de concreto.
+
+PARTIDA:
+Concreto armado en columnas.
+
+PRESUPUESTO:
+Suma de todas las partidas del proyecto.
+
+Si cambia el precio del cemento, Faro identifica:
+- qué APU utiliza cemento,
+- qué partidas usan ese APU,
+- cuánto cambia cada partida,
+- cuánto cambia el presupuesto total.
+
+
+# 14. Definiciones del dominio
+
+## Insumo
+
+Material o recurso usado en una obra.
+
+Ejemplos:
+- acero,
+- cemento,
+- arena,
+- cable,
+- tubería.
+
+
+## APU — Análisis de Precios Unitarios
+
+Representa cuánto cuesta producir UNA unidad de una partida.
+
+Ejemplo:
+
+1 m3 de concreto:
+- cemento: S/ 150
+- arena: S/ 60
+- piedra: S/ 80
+- mano de obra: S/ 90
+- equipo: S/ 40
+
+Costo unitario:
+S/ 420/m3.
+
+
+## Partida
+
+Unidad específica de trabajo.
+
+Ejemplos:
+- concreto en columnas,
+- instalación de drywall,
+- pintura interior,
+- instalaciones eléctricas.
+
+Una partida tiene:
+- metrado,
+- unidad,
+- precio unitario,
+- costo total.
+
+
+## Metrado
+
+Cantidad de trabajo.
+
+Ejemplo:
+2,000 m3 de concreto.
+
+
+# 15. Cálculo de impacto por variación de precio
+
+Este cálculo es CENTRAL.
+
+Ejemplo:
+
+Precio congelado del acero:
+S/ 4.00/kg.
+
+Precio actual:
+S/ 4.35/kg.
+
+Cantidad pendiente de comprar:
+100,000 kg.
+
+Impacto:
+
+(4.35 - 4.00) * 100,000
+= S/ 35,000.
+
+Entonces Faro debería mostrar:
+
+Acero corrugado
+Precio base: S/ 4.00/kg
+Precio actual: S/ 4.35/kg
+Variación: +8.75%
+Impacto: +S/ 35,000
+
+IMPORTANTE:
+
+NO usar solamente el porcentaje como criterio de importancia.
+
+La alerta debe priorizarse por IMPACTO EN SOLES / impacto financiero.
+
+Ejemplo:
+
+Producto A:
+sube 20%, pero genera S/500 de impacto.
+
+Producto B:
+sube 4%, pero genera S/90,000 de impacto.
+
+Producto B es más importante.
+
+Por eso el dashboard debe priorizar:
+IMPACTO ABSOLUTO.
+
+
+# 16. Cantidad pendiente
+
+No se debe recalcular el presupuesto futuro usando automáticamente toda la cantidad inicial si una parte ya fue comprada.
+
+Ejemplo:
+
+Cantidad total:
+100,000 kg.
+
+Ya comprado:
+70,000 kg.
+
+Pendiente:
+30,000 kg.
+
+Precio antiguo:
+S/ 4.
+
+Precio nuevo:
+S/ 5.
+
+Impacto futuro:
+
+30,000 * (5 - 4)
+= S/ 30,000.
+
+NO:
+100,000 * (5 - 4).
+
+Este detalle es importante para que las simulaciones sean financieramente coherentes.
+
+
+# 17. Monitoreo de precios
+
+Una vez congelada la cotización, Faro puede seguir revisando el precio.
+
+Conceptualmente:
+
+Cada semana:
+-> obtiene / registra precio actual,
+-> compara con el precio congelado.
+
+A este concepto interno lo llamamos también:
+
+"Cotización fantasma".
+
+No necesariamente mostrar este nombre al usuario final si resulta confuso.
+
+Representa una recotización automática o simulada de los mismos insumos para saber cuánto costarían hoy.
+
+Flujo:
+
+Precio congelado
+-> recotización periódica
+-> precio actual
+-> comparación.
+
+
+# 18. Condición de variación
+
+Decisión:
+
+¿El precio varió de manera relevante?
+
+NO:
+- no generar alerta importante,
+- guardar histórico.
+
+SÍ:
+- calcular impacto,
+- identificar partidas,
+- buscar alternativas,
+- generar alerta.
+
+
+# 19. Proveedores alternativos
+
+Cuando existe una variación importante, Faro permite comparar otros proveedores que vendan EL MISMO INSUMO.
+
+Ejemplo:
+
+Acero corrugado:
+
+Proveedor A:
+S/ 4.65/kg
+
+Proveedor B:
+S/ 4.35/kg
+
+Proveedor C:
+S/ 4.18/kg
+
+No mostrar solo la lista de precios.
+
+Mostrar ESCENARIOS FINANCIEROS.
+
+
+# 20. Simulación de escenarios
+
+Ejemplo:
+
+Cantidad pendiente:
+80,000 kg.
+
+Presupuesto base:
+S/ 4.20/kg.
+
+Proveedor actual:
+S/ 4.65.
+
+Proveedor B:
+S/ 4.35.
+
+Proveedor C:
+S/ 4.18.
+
+Faro debería generar algo como:
+
+ESCENARIO ACTUAL
+Costo pendiente: S/ 372,000
+Impacto: +S/ 36,000.
+
+ESCENARIO B
+Costo pendiente: S/ 348,000
+Impacto: +S/ 12,000.
+
+ESCENARIO C
+Costo pendiente: S/ 334,400
+Impacto: -S/ 1,600.
+
+Esto debe repercutir también en:
+
+- partidas,
+- presupuesto total,
+- margen.
+
+
+# 21. Margen
+
+El margen representa cuánto dinero / rentabilidad queda después de considerar los costos.
+
+En el demo conceptual existe un ejemplo como:
+
+Margen inicial:
+11.4%.
+
+Sube el precio del acero.
+
+Impacto:
+S/ 90,000.
+
+Nuevo margen:
+9.6%.
+
+Esta transformación es muy importante visualmente.
+
+No mostrar solamente:
+"+8% acero".
+
+Mostrar:
+
+"Este aumento reduce el margen del proyecto de 11.4% a 9.6%."
+
+Eso habla directamente el lenguaje de gerencia.
+
+
+# 22. Alertas
+
+Las alertas deberían priorizarse principalmente por impacto en soles.
+
+Cada alerta debería mostrar:
+
+- producto,
+- proveedor actual,
+- precio congelado,
+- precio nuevo,
+- variación porcentual,
+- cantidad pendiente,
+- impacto en soles,
+- partidas afectadas,
+- impacto en margen,
+- fecha de detección,
+- fuente del nuevo precio,
+- nivel de confianza.
+
+Ejemplo:
+
+ALERTA CRÍTICA
+
+Acero corrugado 1/2"
+Proveedor: X
+
+Precio:
+S/ 4.00 -> S/ 4.35
+
+Variación:
++8.75%
+
+Impacto:
++S/ 90,000
+
+Partidas afectadas:
+14
+
+Margen:
+11.4% -> 9.6%
+
+CTA:
+"Comparar proveedores".
+
+
+# 23. Centro de alertas
+
+Debe existir un lugar específico para revisar alertas.
+
+Ejemplo de filtros:
+
+- Todas
+- Críticas
+- Medias
+- Resueltas
+
+Estados posibles:
+
+- nueva,
+- revisada,
+- en análisis,
+- resuelta.
+
+Una alerta resuelta debería registrar qué decisión tomó el usuario.
+
+
+# 24. Acción de decisión
+
+Después de comparar escenarios, el usuario puede:
+
+- mantener proveedor actual,
+- aceptar proveedor alternativo,
+- registrar nuevo precio,
+- actualizar presupuesto,
+- generar adenda,
+- exportar hacia S10.
+
+El producto debe llevar siempre de:
+
+ALERTA -> CONTEXTO -> ESCENARIOS -> DECISIÓN.
+
+Evitar dashboards donde el usuario solamente mira números y no sabe qué hacer.
+
+
+# 25. Contrato con cláusula de variación
+
+En el concepto actual también existe un módulo / documento:
+
+"Contrato con cláusula de variación."
+
+La idea es que una cotización / contrato pueda establecer condiciones ante cambios de precio.
+
+No es necesario implementar jurídicamente un contrato real.
+
+En el MVP puede visualizarse como:
+- documento,
+- estado,
+- condiciones,
+- cláusula,
+- fecha,
+- precio base.
+
+No inventar contenido legal complejo.
+
+
+# 26. Dashboard financiero
+
+El dashboard financiero debe ser una de las pantallas principales.
+
+Debe responder rápidamente:
+
+1. ¿Cómo está mi proyecto?
+2. ¿Cuánto es mi presupuesto?
+3. ¿Cuál es mi nuevo presupuesto proyectado?
+4. ¿Cuál es mi margen?
+5. ¿Qué materiales generan mayor exposición?
+6. ¿Qué alertas requieren atención?
+7. ¿Qué partidas están siendo afectadas?
+8. ¿Qué cambios se han producido recientemente?
+
+Elementos visuales posibles:
+
+Cards:
+- Presupuesto base
+- Presupuesto proyectado
+- Impacto acumulado
+- Margen
+- Alertas críticas
+
+Curva S:
+Si el frontend actual ya incluye curva S puede conservarse como parte de la vista de proyecto, pero no debe convertirse en la pieza principal de la nueva propuesta de valor.
+
+Tabla de partidas:
+- partida,
+- presupuesto,
+- variación,
+- impacto,
+- estado.
+
+Alertas recientes.
+
+Materiales con mayor impacto.
+
+Histórico de cambios de precios.
+
+
+# 27. Curva S
+
+En el concepto previo se utilizaba para:
+- avance planificado,
+- avance real.
+
+Puede mantenerse en el dashboard como parte del control general de proyecto.
+
+Sin embargo, el flujo actual del producto está más centrado en:
+PRECIOS -> PARTIDAS -> PRESUPUESTO -> MARGEN.
+
+No construir toda la experiencia alrededor de EVM / CPI / SPI si el producto actual no lo requiere.
+
+
+# 28. Avance de obra
+
+En el diseño actual existe también una sección de avance de obra con:
+- fotos,
+- porcentaje por partida.
+
+Esto puede permanecer como módulo secundario.
+
+No mezclarlo obligatoriamente con el motor de alertas de precios.
+
+Es una funcionalidad complementaria del proyecto.
+
+
+# 29. Exportación a S10
+
+Una parte importante del flujo es:
+
+Faro -> S10.
+
+El objetivo conceptual:
+
+Después de que la constructora tome una decisión y acepte un nuevo precio / proveedor:
+
+-> Faro recalcula el presupuesto,
+-> prepara la actualización,
+-> el usuario puede llevar el resultado a S10.
+
+IMPORTANTE:
+
+No asumir que tenemos una API oficial funcional de S10 si no existe en el código.
+
+En el MVP puede tratarse como:
+
+- botón de exportación,
+- generación de archivo,
+- simulación de integración,
+- JSON / Excel / CSV compatible,
+- pantalla de confirmación.
+
+El frontend debe ser honesto.
+
+Usar textos como:
+"Exportar presupuesto"
+"Preparar actualización S10"
+
+en vez de fingir sincronización live si no existe backend real.
+
+
+# 30. EQUIP
+
+EQUIP es un referente / competidor existente en el mercado peruano.
+
+Puede resolver parte de la cotización con proveedores.
+
+No construir FARO suponiendo que EQUIP nos va a dar una API.
+
+No hacer que el usuario tenga que autenticar EQUIP.
+
+No hacer que la aplicación deje de funcionar sin EQUIP.
+
+La distinción conceptual:
+
+EQUIP / otros marketplaces:
+"¿A cuánto puedo comprar?"
+
+FARO:
+"¿Qué significa este nuevo precio para mi proyecto?"
+
+Faro puede recibir una cotización proveniente de:
+- proveedor directo,
+- Excel,
+- WhatsApp,
+- factura,
+- plataforma externa.
+
+Su valor comienza después de recibir el precio.
+
+
+# 31. Diferenciación de FARO
+
+El diferenciador NO debe venderse como:
+
+"Tenemos más proveedores."
+
+Ni:
+
+"Conseguimos precios más baratos."
+
+Ni:
+
+"Somos otro marketplace."
+
+La propuesta más defendible es:
+
+"Faro traduce variaciones del mercado a impacto financiero específico de cada obra."
+
+O:
+
+"Faro conecta los precios de los insumos con las partidas y el presupuesto."
+
+O:
+
+"Faro permite evaluar escenarios antes de actualizar el presupuesto en S10."
+
+
+# 32. Flujo de usuario principal para la demo
+
+Debe existir un único happy path muy fácil de demostrar.
+
+Ejemplo conceptual:
+
+1. Usuario inicia sesión.
+2. Entra a "Condominio Los Álamos".
+3. Ve un dashboard saludable.
+4. Presupuesto actual y margen están en verde.
+5. Faro detecta una variación de precio.
+6. Aparece alerta:
+   "Acero subió 8%."
+7. El usuario abre la alerta.
+8. Faro muestra:
+   - nuevo precio,
+   - 14 partidas afectadas,
+   - impacto de S/90,000,
+   - margen baja de 11.4% a 9.6%.
+9. El usuario pulsa "Comparar proveedores".
+10. Faro muestra varias alternativas.
+11. Un proveedor tiene un precio 3% menor.
+12. Usuario selecciona ese escenario.
+13. Faro recalcula:
+   - presupuesto,
+   - costo final,
+   - margen.
+14. Usuario acepta.
+15. Presupuesto queda actualizado.
+16. Faro ofrece:
+   "Exportar a S10".
+17. Fin.
+
+Este flujo debe estar extremadamente pulido.
+
+
+# 33. Pantallas sugeridas
+
+El frontend debería contemplar, idealmente:
+
+## Login
+
+Simple.
+No perder tiempo aquí.
+
+
+## Mis proyectos
+
+Cards de proyectos con:
+- nombre,
+- ubicación,
+- presupuesto,
+- margen,
+- alertas,
+- estado.
+
+
+## Crear proyecto
+
+Campos:
+- nombre,
+- ubicación,
+- fecha,
+- moneda,
+- presupuesto base opcional.
+
+
+## Vista de proyecto
+
+Resumen:
+- presupuesto,
+- margen,
+- variaciones,
+- alertas.
+
+Accesos:
+- Dashboard
+- Catálogo
+- Cotizaciones
+- Presupuesto
+- Alertas
+- Proveedores
+- Contrato
+- Avance de obra.
+
+
+## Catálogo / carrito
+
+Productos con:
+- nombre,
+- SKU,
+- unidad,
+- familia,
+- precio de referencia,
+- cantidad.
+
+CTA:
+"Agregar al proyecto".
+
+
+## Cotizaciones
+
+Debe mostrar:
+- proveedor,
+- fecha,
+- insumos,
+- precio,
+- vigencia,
+- estado.
+
+
+## Presupuesto
+
+Jerarquía:
+Partida -> APU -> insumos.
+
+Permitir expandir detalle.
+
+
+## Alertas
+
+Lista y detalle.
+
+
+## Comparador
+
+Una de las pantallas visualmente más importantes.
+
+Comparar:
+- proveedor actual,
+- proveedor B,
+- proveedor C.
+
+No solo por precio.
+
+También:
+- impacto total,
+- margen resultante,
+- ahorro vs escenario actual.
+
+
+## Dashboard financiero
+
+Vista ejecutiva.
+
+
+## Exportación S10
+
+Resumen final del escenario aprobado.
+
+
+# 34. Arquitectura mental del frontend
+
+El frontend debe reforzar siempre esta cadena:
+
+PRECIO
+-> INSUMO
+-> APU
+-> PARTIDA
+-> PRESUPUESTO
+-> MARGEN
+-> DECISIÓN.
+
+Cuando se muestre un cambio de precio, debe ser posible entender cómo ese cambio llega hasta el impacto final.
+
+La interfaz debe evitar datos aislados.
+
+
+# 35. Modelo de datos conceptual
+
+No es obligatorio usar exactamente estas interfaces, pero este modelo sirve como guía.
+
+Project
+{
+  id
+  name
+  location
+  currency
+  startDate
+  baseBudget
+  projectedBudget
+  originalMargin
+  currentMargin
+  status
+}
+
+Supplier
+{
+  id
+  name
+  type
+  contact
+  sourceType
+  confidence
+}
+
+Product
+{
+  id
+  sku
+  name
+  unit
+  family
+}
+
+PriceRecord
+{
+  id
+  productId
+  supplierId
+  price
+  currency
+  timestamp
+  source
+  confidence
+}
+
+Quote
+{
+  id
+  projectId
+  supplierId
+  date
+  validUntil
+  status
+  items[]
+}
+
+QuoteItem
+{
+  productId
+  quantity
+  unitPrice
+  subtotal
+}
+
+BudgetItem
+{
+  id
+  projectId
+  productId
+  basePrice
+  requiredQuantity
+  purchasedQuantity
+  pendingQuantity
+}
+
+APU
+{
+  id
+  name
+  components[]
+}
+
+Partida
+{
+  id
+  name
+  unit
+  quantity
+  apuId
+  baseCost
+  projectedCost
+}
+
+PriceAlert
+{
+  id
+  projectId
+  productId
+  oldPrice
+  newPrice
+  percentageChange
+  pendingQuantity
+  financialImpact
+  affectedPartidas[]
+  marginBefore
+  marginAfter
+  severity
+  status
+  detectedAt
+}
+
+Scenario
+{
+  id
+  alertId
+  supplierId
+  unitPrice
+  projectedImpact
+  projectedBudget
+  projectedMargin
+}
+
+
+# 36. Datos demo recomendados
+
+No utilizar lorem ipsum.
+
+Usar información inmobiliaria coherente.
+
+Proyecto principal:
+Condominio Los Álamos.
+
+Presupuesto base:
+aproximadamente S/ 10 millones.
+
+Margen inicial:
+11.4%.
+
+Producto crítico:
+Acero corrugado.
+
+Variación:
+aprox. +8%.
+
+Impacto:
+aprox. +S/90,000.
+
+Partidas afectadas:
+14.
+
+Margen nuevo:
+9.6%.
+
+Proveedor alternativo:
+aprox. 3% más barato que el precio nuevo.
+
+Estos números son demo y deben mantenerse consistentes entre pantallas.
+
+Si cambias un dato en una pantalla, revisar que no contradiga otra.
+
+
+# 37. Diseño visual
+
+Brand:
+FARO.
+
+Identidad:
+- proptech,
+- construcción,
+- finanzas,
+- control,
+- claridad,
+- confianza.
+
+Paleta principal:
+- azul oscuro,
+- azul,
+- celeste,
+- blanco.
+
+No convertir todo en celeste.
+Usar fondos claros y bastante espacio en blanco.
+
+Estados:
+- verde = controlado / saludable,
+- amarillo = atención,
+- rojo = impacto crítico.
+
+El azul debe seguir siendo el color principal de marca.
+
+Estética:
+- SaaS B2B moderno,
+- limpio,
+- ejecutivo,
+- profesional,
+- minimalista.
+
+Evitar estética:
+- app infantil,
+- marketplace de consumo,
+- e-commerce genérico,
+- crypto dashboard,
+- neón.
+
+Cards redondeadas.
+Sombras sutiles.
+Tipografía limpia.
+Tablas fáciles de leer.
+
+Priorizar números importantes en tamaño grande.
+
+
+# 38. UX
+
+Regla principal:
+
+Cualquier gerente debería entender en menos de 10 segundos:
+
+- qué cambió,
+- cuánto dinero afecta,
+- qué opción tiene.
+
+Cada pantalla debe tener jerarquía clara.
+
+Ejemplo de detalle de alerta:
+
+Título:
+"Acero corrugado aumentó de precio"
+
+Subtítulo:
+"El cambio afecta 14 partidas del proyecto."
+
+Número principal:
+"+ S/ 90,000"
+
+Debajo:
+"Margen estimado: 11.4% -> 9.6%"
+
+CTA principal:
+"Comparar alternativas".
+
+Evitar saturar de indicadores técnicos innecesarios.
+
+
+# 39. Términos que deben mantenerse consistentes
+
+Usar:
+
+- Proyecto
+- Insumo
+- Proveedor
+- Cotización
+- Precio vigente
+- Precio base
+- Precio congelado
+- Partida
+- APU
+- Metrado
+- Presupuesto
+- Margen
+- Impacto
+- Variación
+- Alerta
+- Escenario
+- Exportación a S10
+
+No mezclar continuamente:
+"producto", "material", "SKU", "recurso", "insumo"
+si representan la misma entidad visual.
+
+En interfaz preferimos normalmente:
+INSUMO.
+
+SKU puede mostrarse como atributo técnico.
+
+
+# 40. Qué NO debe hacer Codex sin preguntar
+
+NO eliminar funcionalidades existentes sin necesidad.
+
+NO reescribir completamente el proyecto si basta modificar componentes.
+
+NO cambiar stack tecnológico arbitrariamente.
+
+NO instalar librerías enormes sin justificarlo.
+
+NO crear backend falso si solo se está trabajando frontend.
+
+NO integrar APIs externas inventadas.
+
+NO usar servicios de pago.
+
+NO depender de EQUIP.
+
+NO implementar machine learning.
+
+NO vender automáticamente materiales.
+
+NO fingir sincronizaciones reales con S10.
+
+NO crear features que no ayuden al flujo demo.
+
+
+# 41. Prioridad de desarrollo
+
+Si hay poco tiempo, este orden:
+
+P0:
+1. Vista proyecto / dashboard.
+2. Centro de alertas.
+3. Detalle de alerta.
+4. Comparador de proveedores / escenarios.
+5. Recalcular presupuesto.
+6. Confirmación / exportación a S10.
+
+P1:
+7. Catálogo.
+8. Carrito.
+9. Cotizaciones.
+10. Presupuesto / APU / partidas.
+
+P2:
+11. Proveedores.
+12. Contratos.
+13. Avance de obra.
+14. Historial complejo.
+
+
+# 42. Contexto de la hackathon
+
+No es un producto terminado.
+
+Es un prototipo que será evaluado por un jurado.
+
+Los criterios incluyen:
+- relevancia del problema y usuario,
+- evidencia de entendimiento del problema,
+- aplicabilidad,
+- viabilidad técnica y operativa,
+- creatividad / innovación,
+- ejecución,
+- claridad de presentación.
+
+Por eso el frontend debe estar optimizado para DEMOSTRAR LA PROPUESTA DE VALOR.
+
+No necesitamos cubrir cientos de edge cases.
+
+Necesitamos un happy path convincente y visualmente consistente.
+
+
+# 43. Qué debe transmitir la demo
+
+El jurado debe salir entendiendo esto:
+
+ANTES:
+
+"El acero subió."
+
+La constructora todavía tiene que descubrir manualmente:
+- dónde impacta,
+- cuánto impacta,
+- qué presupuesto modificar,
+- qué proveedor conviene.
+
+CON FARO:
+
+"El acero subió 8%."
+
+Inmediatamente Faro muestra:
+
+- impacto: +S/90k,
+- 14 partidas afectadas,
+- margen: 11.4% -> 9.6%,
+- proveedores alternativos,
+- escenario recomendado,
+- presupuesto recalculado,
+- exportación hacia S10.
+
+Este contraste es la esencia de la demo.
+
+
+# 44. Filosofía de producto
+
+Faro funciona como un "radar financiero" de la obra.
+
+No busca sustituir necesariamente las herramientas existentes.
+
+Busca conectar:
+precios del mercado + presupuesto de obra + decisión.
+
+Su objetivo es transformar datos dispersos en acciones concretas.
+
+
+# 45. Instrucción para modificar el frontend existente
+
+Antes de modificar código:
+
+1. Analiza la estructura actual completa del repositorio.
+2. Identifica:
+   - framework,
+   - router,
+   - componentes,
+   - sistema de estilos,
+   - manejo de estado,
+   - páginas actuales,
+   - mock data existente.
+3. No reescribas todo.
+4. Reutiliza componentes.
+5. Mantén convenciones actuales.
+6. Señala qué componentes pueden mantenerse.
+7. Señala cuáles deben modificarse.
+8. Señala cuáles deben agregarse.
+
+Primero entrega un pequeño plan de implementación.
+
+Luego implementa.
+
+La prioridad es que el flujo de demo funcione de punta a punta.
+
+
+# 46. Flujo final que debe poder recorrerse en frontend
+
+LOGIN
+
+-> MIS PROYECTOS
+
+-> CONDOMINIO LOS ÁLAMOS
+
+-> DASHBOARD
+
+-> aparece ALERTA ACERO
+
+-> ABRIR ALERTA
+
+-> ver impacto:
+   +S/90,000
+   14 partidas
+   margen 11.4% -> 9.6%
+
+-> COMPARAR PROVEEDORES
+
+-> ver 3 escenarios
+
+-> seleccionar alternativa
+
+-> RECALCULAR
+
+-> mostrar nuevo presupuesto y nuevo margen
+
+-> CONFIRMAR
+
+-> EXPORTAR / PREPARAR ACTUALIZACIÓN A S10
+
+FIN.
+
+
+# 47. Resultado esperado
+
+Quiero que adaptes el frontend existente para que represente correctamente FARO.
+
+No quiero solamente pantallas bonitas.
+
+Quiero coherencia entre:
+- datos,
+- navegación,
+- terminología,
+- cálculos,
+- historia de demo.
+
+Cuando tengas que decidir entre agregar una feature nueva o mejorar la claridad del happy path, prioriza el happy path.
+
+Todo debe sentirse como una sola plataforma B2B coherente.
