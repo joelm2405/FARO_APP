@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import logo from "./logo.jpg";
 import fotoLogin from "./images.jpg";
 import MensajesObra from "./MensajesObra";
@@ -88,19 +88,16 @@ function Login({ onEntrar }: { onEntrar: () => void }) {
 /* -------------------------------------------------------------- Proyectos */
 
 function ListaProyectos({
-  proyectos, insumos, onAbrir, onCrear,
+  proyectos, insumos, onAbrir,
 }: {
   proyectos: Proyecto[]; insumos: Record<string, Insumo>;
-  onAbrir: (id: string) => void; onCrear: () => void;
+  onAbrir: (id: string) => void;
 }) {
   return (
     <div className="content">
       <div className="section-title">
         <h2>Mis proyectos</h2>
         <span>{proyectos.length} obras activas</span>
-        <div style={{ marginLeft: "auto" }}>
-          <button className="btn btn--sm" onClick={onCrear}>Crear proyecto</button>
-        </div>
       </div>
       <div className="grid grid--2">
         {proyectos.map((p) => {
@@ -972,8 +969,7 @@ export default function App() {
               </div>
             </div>
             <ListaProyectos proyectos={PROYECTOS} insumos={insumos}
-                            onAbrir={(id) => { setProyectoId(id); setTab("resumen"); }}
-                            onCrear={() => setVerNuevoProyecto(true)} />
+                            onAbrir={(id) => { setProyectoId(id); setTab("resumen"); }} />
           </>
         )}
       </div>
